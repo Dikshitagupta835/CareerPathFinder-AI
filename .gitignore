@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Production builds
+client/dist/
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+client/.env
+client/.env.local
+server/.env
+
+# Local database files
+server/data/users.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# System Files
+.DS_Store
+Thumbs.db

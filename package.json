@@ -1,0 +1,11 @@
+{
+  "name": "career-pathfinder-root",
+  "version": "1.0.0",
+  "description": "Root orchestrator for CareerPathFinder AI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {}
+}

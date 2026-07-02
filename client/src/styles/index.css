@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold tracking-tight;
+  }
+}
+
+/* Glassmorphism Cards Utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Glassmorphism Cards with Hover Effects */
+.glass-card {
+  @apply glass-panel rounded-glass transition-all duration-300;
+}
+
+.glass-card:hover {
+  @apply transform -translate-y-1 shadow-lg border-indigo-500/20 dark:border-indigo-400/20;
+}
+
+/* Soft Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Pulsing Agent Glowing Rings */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(79, 70, 229, 0);
+  }
+}
+
+.agent-glowing {
+  animation: pulseGlow 2s infinite;
+}
+
+/* Custom Gradient Button utilities */
+.btn-primary {
+  @apply bg-gradient-to-r from-brand-primary to-brand-secondary text-white font-medium px-5 py-2.5 rounded-full hover:opacity-95 shadow-md active:scale-95 transition-all duration-200;
+}
+
+.btn-secondary {
+  @apply bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium px-5 py-2.5 rounded-full hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all duration-200;
+}
+
+.btn-ghost {
+  @apply text-slate-600 dark:text-slate-400 font-medium px-5 py-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200;
+}

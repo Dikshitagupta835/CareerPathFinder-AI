@@ -1,0 +1,100 @@
+[
+  {
+    "careerId": "chartered-accountant",
+    "careerName": "Chartered Accountant",
+    "trends": [
+      { "experience": "Entry Level (0-2 yrs)", "salaryIndia": 700000, "salaryGlobal": 60000 },
+      { "experience": "Mid Career (3-6 yrs)", "salaryIndia": 1100000, "salaryGlobal": 90000 },
+      { "experience": "Senior Level (7-12 yrs)", "salaryIndia": 1800000, "salaryGlobal": 130000 },
+      { "experience": "Leadership (12+ yrs)", "salaryIndia": 3500000, "salaryGlobal": 210000 }
+    ],
+    "growthRate": "12%",
+    "automationRisk": 0.22,
+    "marketStability": "High",
+    "hiringTrend": "Steady growth for corporate compliance and global audit standards"
+  },
+  {
+    "careerId": "financial-analyst",
+    "careerName": "Financial Analyst",
+    "trends": [
+      { "experience": "Entry Level (0-2 yrs)", "salaryIndia": 600000, "salaryGlobal": 65000 },
+      { "experience": "Mid Career (3-6 yrs)", "salaryIndia": 950000, "salaryGlobal": 95000 },
+      { "experience": "Senior Level (7-12 yrs)", "salaryIndia": 1500000, "salaryGlobal": 140000 },
+      { "experience": "Leadership (12+ yrs)", "salaryIndia": 2800000, "salaryGlobal": 220000 }
+    ],
+    "growthRate": "15%",
+    "automationRisk": 0.45,
+    "marketStability": "Medium-High",
+    "hiringTrend": "High demand in asset management firms and private equity"
+  },
+  {
+    "careerId": "investment-banker",
+    "careerName": "Investment Banker",
+    "trends": [
+      { "experience": "Entry Level (0-2 yrs)", "salaryIndia": 1200000, "salaryGlobal": 110000 },
+      { "experience": "Mid Career (3-6 yrs)", "salaryIndia": 2200000, "salaryGlobal": 160000 },
+      { "experience": "Senior Level (7-12 yrs)", "salaryIndia": 4000000, "salaryGlobal": 250000 },
+      { "experience": "Leadership (12+ yrs)", "salaryIndia": 8000000, "salaryGlobal": 500000 }
+    ],
+    "growthRate": "18%",
+    "automationRisk": 0.12,
+    "marketStability": "Medium (Highly sensitive to interest rates and economic cycles)",
+    "hiringTrend": "Intense competition, premium placement packages"
+  },
+  {
+    "careerId": "management-consultant",
+    "careerName": "Management Consultant",
+    "trends": [
+      { "experience": "Entry Level (0-2 yrs)", "salaryIndia": 900000, "salaryGlobal": 80000 },
+      { "experience": "Mid Career (3-6 yrs)", "salaryIndia": 1600000, "salaryGlobal": 120000 },
+      { "experience": "Senior Level (7-12 yrs)", "salaryIndia": 2600000, "salaryGlobal": 180000 },
+      { "experience": "Leadership (12+ yrs)", "salaryIndia": 5000000, "salaryGlobal": 320000 }
+    ],
+    "growthRate": "14%",
+    "automationRisk": 0.15,
+    "marketStability": "High",
+    "hiringTrend": "Firms scaling up operations consulting and digital transformation services"
+  },
+  {
+    "careerId": "data-scientist",
+    "careerName": "Data Scientist",
+    "trends": [
+      { "experience": "Entry Level (0-2 yrs)", "salaryIndia": 850000, "salaryGlobal": 90000 },
+      { "experience": "Mid Career (3-6 yrs)", "salaryIndia": 1400000, "salaryGlobal": 130000 },
+      { "experience": "Senior Level (7-12 yrs)", "salaryIndia": 2400000, "salaryGlobal": 180000 },
+      { "experience": "Leadership (12+ yrs)", "salaryIndia": 4500000, "salaryGlobal": 280000 }
+    ],
+    "growthRate": "25%",
+    "automationRisk": 0.18,
+    "marketStability": "Very High",
+    "hiringTrend": "Exponential demand for AI engineering and LLM customization skills"
+  },
+  {
+    "careerId": "economist",
+    "careerName": "Economist",
+    "trends": [
+      { "experience": "Entry Level (0-2 yrs)", "salaryIndia": 600000, "salaryGlobal": 70000 },
+      { "experience": "Mid Career (3-6 yrs)", "salaryIndia": 900000, "salaryGlobal": 100000 },
+      { "experience": "Senior Level (7-12 yrs)", "salaryIndia": 1500000, "salaryGlobal": 150000 },
+      { "experience": "Leadership (12+ yrs)", "salaryIndia": 2500000, "salaryGlobal": 230000 }
+    ],
+    "growthRate": "10%",
+    "automationRisk": 0.28,
+    "marketStability": "High",
+    "hiringTrend": "Steady hiring in government research, central banking, and corporate forecasting units"
+  },
+  {
+    "careerId": "business-analyst",
+    "careerName": "Business Analyst",
+    "trends": [
+      { "experience": "Entry Level (0-2 yrs)", "salaryIndia": 500000, "salaryGlobal": 60000 },
+      { "experience": "Mid Career (3-6 yrs)", "salaryIndia": 850000, "salaryGlobal": 88000 },
+      { "experience": "Senior Level (7-12 yrs)", "salaryIndia": 1350000, "salaryGlobal": 125000 },
+      { "experience": "Leadership (12+ yrs)", "salaryIndia": 2200000, "salaryGlobal": 180000 }
+    ],
+    "growthRate": "14%",
+    "automationRisk": 0.38,
+    "marketStability": "High",
+    "hiringTrend": "Widespread hiring as all sectors digitize and require systems analysis"
+  }
+]
