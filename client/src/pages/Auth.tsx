@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { 
-  Mail, Lock, User, Phone, Eye, EyeOff, 
-  ArrowLeft, Shield, ChevronRight
+  Mail, Lock, User, Eye, EyeOff, 
+  Shield, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,33 +24,19 @@ export const Auth: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Auth Modes: 'signin' | 'signup' | 'otp' | 'picker' | 'returning'
-  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'otp' | 'picker' | 'returning'>('signin');
+  // Auth Modes: 'signin' | 'signup' | 'picker' | 'returning'
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'picker' | 'returning'>('signin');
   
   // Input fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   
   // Password visible states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
-  // OTP flow states
-  const [otpStep, setOtpStep] = useState(1); // 1 = Phone Input, 2 = Code Input
-  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
-  const [resendCountdown, setResendCountdown] = useState(30);
-  const otpRefs = [
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null)
-  ];
 
   // Saved accounts for return user detection
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
@@ -92,14 +78,7 @@ export const Auth: React.FC = () => {
     }
   }, [authMode]);
 
-  // Countdown timer for OTP
-  useEffect(() => {
-    let timer: any;
-    if (authMode === 'otp' && otpStep === 2 && resendCountdown > 0) {
-      timer = setTimeout(() => setResendCountdown(prev => prev - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [authMode, otpStep, resendCountdown]);
+
 
   // Calculate password strength index (0-4)
   const getPasswordStrength = (pass: string) => {
@@ -195,81 +174,7 @@ export const Auth: React.FC = () => {
     }
   };
 
-  const handleSendOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phone) {
-      setError('Please enter your phone number');
-      return;
-    }
-    setError('');
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setOtpStep(2);
-      setResendCountdown(30);
-    }, 1000);
-  };
 
-  const handleOtpChange = (index: number, val: string) => {
-    if (isNaN(Number(val))) return;
-    const newOtp = [...otpCode];
-    newOtp[index] = val.slice(-1);
-    setOtpCode(newOtp);
-
-    // Auto-advance
-    if (val && index < 5) {
-      otpRefs[index + 1].current?.focus();
-    }
-
-    // Auto-submit on complete
-    if (newOtp.every(x => x !== '')) {
-      handleVerifyOtp(newOtp.join(''));
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
-      otpRefs[index - 1].current?.focus();
-    }
-  };
-
-  const handleVerifyOtp = async (code: string) => {
-    console.log("Verifying OTP code:", code);
-    setIsLoading(true);
-    setError('');
-    // Mock successful OTP verification
-    setTimeout(async () => {
-      try {
-        const mockEmail = `phone_${phone.replace(/\D/g, '')}@cpf.ai`;
-        await signup(`Phone User`, mockEmail, 'password123');
-        saveAccountDetails(mockEmail, 'Phone User');
-      } catch (err: any) {
-        setError(err.message || 'OTP verification failed.');
-        setIsLoading(false);
-      }
-    }, 1200);
-  };
-
-  const handlePasteOtp = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').slice(0, 6);
-    if (!/^\d+$/.test(pasted)) return;
-    
-    const chars = pasted.split('');
-    const newOtp = [...otpCode];
-    for (let i = 0; i < 6; i++) {
-      if (chars[i]) newOtp[i] = chars[i];
-    }
-    setOtpCode(newOtp);
-    
-    // Focus last box
-    const focusIdx = Math.min(chars.length, 5);
-    otpRefs[focusIdx].current?.focus();
-
-    if (newOtp.every(x => x !== '')) {
-      handleVerifyOtp(newOtp.join(''));
-    }
-  };
 
   return (
     <div className="flex min-h-screen w-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto">
@@ -527,27 +432,7 @@ export const Auth: React.FC = () => {
                   <p className="text-xs text-slate-450">Unlock customized roadmaps, college matches, and ROI tools</p>
                 </div>
 
-                {/* Social logins */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => alert("Google sign in is supported. Authenticating...")}
-                    className="h-13 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:shadow-sm text-xs font-bold flex items-center justify-center gap-2.5 transition-all"
-                  >
-                    <span>🌐</span> Google
-                  </button>
-                  <button
-                    onClick={() => setAuthMode('otp')}
-                    className="h-13 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:shadow-sm text-xs font-bold flex items-center justify-center gap-2.5 transition-all"
-                  >
-                    <span>📱</span> Phone OTP
-                  </button>
-                </div>
 
-                <div className="flex items-center gap-4 text-xs text-slate-350">
-                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
-                  <span>or email credentials</span>
-                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
-                </div>
 
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-1">
@@ -759,125 +644,6 @@ export const Auth: React.FC = () => {
                     Sign in →
                   </button>
                 </p>
-              </motion.div>
-            )}
-
-            {/* PHONE / OTP FLOW */}
-            {authMode === 'otp' && (
-              <motion.div
-                key="otp"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center gap-2 -ml-2">
-                  <button 
-                    onClick={() => {
-                      setError('');
-                      setOtpStep(1);
-                      setAuthMode('signin');
-                    }}
-                    className="p-2 text-slate-450 hover:text-indigo-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                  >
-                    <ArrowLeft size={16} />
-                  </button>
-                  <span className="text-xs font-bold text-slate-400">Use regular Sign In</span>
-                </div>
-
-                {otpStep === 1 ? (
-                  /* Step 1: Phone number entry */
-                  <div className="space-y-5">
-                    <div className="space-y-1.5 text-center">
-                      <h2 className="text-2xl font-bold font-heading text-slate-900 dark:text-slate-100">Phone Verification</h2>
-                      <p className="text-xs text-slate-450">Enter your phone number to sign in or create an account with OTP</p>
-                    </div>
-
-                    <form onSubmit={handleSendOtp} className="space-y-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
-                        <div className="flex items-center bg-slate-100 dark:bg-slate-900 px-4 h-13 rounded-xl border border-slate-200 dark:border-slate-800 focus-within:border-indigo-500/40 transition-colors">
-                          <Phone size={16} className="text-slate-400 mr-3 shrink-0" />
-                          <span className="text-xs font-bold text-slate-450 border-r border-slate-200 dark:border-slate-800 pr-3 mr-3">+91</span>
-                          <input
-                            type="tel"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                            placeholder="98765 43210"
-                            maxLength={10}
-                            className="bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-250 w-full"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isLoading || phone.length < 10}
-                        className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-550 hover:to-indigo-500 text-white h-13 rounded-xl font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isLoading ? 'Sending OTP...' : 'Send OTP Code 💬'}
-                      </button>
-                    </form>
-                  </div>
-                ) : (
-                  /* Step 2: 6-digit OTP code entry */
-                  <div className="space-y-5">
-                    <div className="space-y-1.5 text-center">
-                      <h2 className="text-2xl font-bold font-heading text-slate-900 dark:text-slate-100">Verify Code</h2>
-                      <p className="text-xs text-slate-450 leading-relaxed">
-                        We sent a 6-digit verification code to <span className="font-bold text-slate-800 dark:text-slate-200">+91 {phone}</span>
-                      </p>
-                    </div>
-
-                    <div className="space-y-6">
-                      {/* Code Input Boxes */}
-                      <div className="flex justify-between gap-2.5">
-                        {otpCode.map((digit, index) => (
-                          <input
-                            key={index}
-                            ref={otpRefs[index]}
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            maxLength={1}
-                            value={digit}
-                            onChange={(e) => handleOtpChange(index, e.target.value)}
-                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                            onPaste={handlePasteOtp}
-                            className="w-12 h-13 text-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-base font-bold text-slate-800 dark:text-slate-200 rounded-xl focus:border-indigo-500/50 focus:outline-none transition-colors"
-                          />
-                        ))}
-                      </div>
-
-                      <div className="flex flex-col items-center gap-2.5 text-xs text-slate-450">
-                        {resendCountdown > 0 ? (
-                          <span>Resend code in <span className="font-bold text-slate-700 dark:text-slate-350">{resendCountdown}s</span></span>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setResendCountdown(30);
-                              alert("OTP resent successfully!");
-                            }}
-                            className="text-indigo-500 font-bold hover:underline"
-                          >
-                            Resend Verification Code
-                          </button>
-                        )}
-                        
-                        <button
-                          onClick={() => {
-                            setOtpStep(1);
-                            setOtpCode(['', '', '', '', '', '']);
-                            setError('');
-                          }}
-                          className="text-slate-400 hover:text-slate-650 hover:underline text-[11px] mt-1"
-                        >
-                          Change phone number
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </motion.div>
             )}
 

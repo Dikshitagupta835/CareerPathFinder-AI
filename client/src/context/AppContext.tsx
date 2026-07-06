@@ -14,6 +14,8 @@ export interface UserProfile {
   marks: string; // percentage/percentile
   interests: string[];
   careerGoals: string[];
+  workStyle?: string;
+  workLifeBalance?: string;
 }
 
 export interface ChatMessage {
@@ -175,6 +177,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const handleLogoutCleanup = () => {
     localStorage.removeItem('cpf_token');
+    localStorage.removeItem('cpf_saved_accounts');
     sessionStorage.removeItem('cpf_token');
     setToken(null);
     setIsAuthenticated(false);
@@ -269,7 +272,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (fieldsToSync.savedColleges !== undefined) payload.savedColleges = fieldsToSync.savedColleges;
       if (fieldsToSync.savedScholarships !== undefined) payload.savedScholarships = fieldsToSync.savedScholarships;
       if (fieldsToSync.chatHistory !== undefined) payload.chatHistory = fieldsToSync.chatHistory;
-      if (fieldsToSync.recommendations !== undefined) payload.recommendations = fieldsToSync.recommendations;
+      if (fieldsToSync.recommendations !== undefined) {
+        payload.recommendations = fieldsToSync.recommendations;
+        setRecommendations(fieldsToSync.recommendations);
+      }
 
       const response = await fetch(`${API_URL}/api/user/sync`, {
         method: 'POST',

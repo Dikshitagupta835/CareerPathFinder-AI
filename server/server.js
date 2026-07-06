@@ -1,14 +1,12 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { orchestrateCareerQuery, runRoiAgent } from './agents/multiAgentSystem.js';
 import * as tools from './tools/mcpTools.js';
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -193,19 +191,39 @@ app.post('/api/auth/logout', authenticateToken, (req, res) => {
   res.json({ success: true });
 });
 
-// Get all databases raw
+// Career data — supports query filters: category, stream, difficulty, search, maxAiRisk, minFutureDemand, interests
 app.get('/api/careers', (req, res) => {
   try {
-    const careers = tools.careerSearchTool({});
+    const query = {};
+    if (req.query.category) query.category = req.query.category;
+    if (req.query.stream) query.stream = req.query.stream;
+    if (req.query.difficulty) query.difficulty = req.query.difficulty;
+    if (req.query.search) query.search = req.query.search;
+    if (req.query.maxAiRisk !== undefined) query.maxAiRisk = parseFloat(req.query.maxAiRisk);
+    if (req.query.minFutureDemand !== undefined) query.minFutureDemand = parseFloat(req.query.minFutureDemand);
+    if (req.query.interests) query.interests = Array.isArray(req.query.interests) ? req.query.interests : [req.query.interests];
+    const careers = tools.careerSearchTool(query);
     res.json(careers);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// College data — supports query filters: country, city, stream, course, search, maxBudget, type, minRating, minPlacementRate, scholarshipsAvailable
 app.get('/api/colleges', (req, res) => {
   try {
-    const colleges = tools.collegeSearchTool({});
+    const query = {};
+    if (req.query.country) query.country = req.query.country;
+    if (req.query.city) query.city = req.query.city;
+    if (req.query.stream) query.stream = req.query.stream;
+    if (req.query.course) query.course = req.query.course;
+    if (req.query.search) query.search = req.query.search;
+    if (req.query.maxBudget !== undefined) query.maxBudget = parseFloat(req.query.maxBudget);
+    if (req.query.type) query.type = req.query.type;
+    if (req.query.minRating !== undefined) query.minRating = parseFloat(req.query.minRating);
+    if (req.query.minPlacementRate !== undefined) query.minPlacementRate = parseFloat(req.query.minPlacementRate);
+    if (req.query.scholarshipsAvailable) query.scholarshipsAvailable = true;
+    const colleges = tools.collegeSearchTool(query);
     res.json(colleges);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -288,6 +306,21 @@ app.post('/api/roi', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Serve static assets in production
+const clientBuildPath = path.join(__dirname, '../client/dist');
+if (fs.existsSync(clientBuildPath)) {
+  console.log(`[Server] Serving static frontend files from ${clientBuildPath}`);
+  app.use(express.static(clientBuildPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+} else {
+  console.warn(`[Server] Static frontend build path not found at ${clientBuildPath}. API-only mode.`);
+}
 
 app.listen(PORT, () => {
   console.log(`[Server] Running on http://localhost:${PORT}`);

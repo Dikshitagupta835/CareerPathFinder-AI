@@ -4,7 +4,7 @@ import { Search, Bell, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const TopNav: React.FC = () => {
-  const { user, isThinking, thinkingAgent, setChatOpen } = useApp();
+  const { user, isThinking, thinkingAgent, setChatOpen, recommendations } = useApp();
   const [greeting, setGreeting] = useState("Good Morning");
   const navigate = useNavigate();
 
@@ -42,12 +42,18 @@ export const TopNav: React.FC = () => {
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold select-none cursor-pointer transition-all duration-200 ${
             isThinking 
               ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 agent-glowing' 
-              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
+              : recommendations?.isDemoMode
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25'
+                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
           }`}
         >
           <Sparkles size={13} className={isThinking ? 'animate-spin' : ''} />
           <span>
-            {isThinking ? `Thinking: ${thinkingAgent}` : 'Coach Status: Online'}
+            {isThinking 
+              ? `Thinking: ${thinkingAgent}` 
+              : recommendations?.isDemoMode 
+                ? 'Demo mode — AI unavailable' 
+                : 'Coach Status: Online'}
           </span>
         </div>
 

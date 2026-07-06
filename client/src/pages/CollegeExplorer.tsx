@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { GlassCard } from '../components/GlassCard';
 import { EmptyState } from '../components/EmptyState';
 import { 
-  GraduationCap, Search, Grid, Map as MapIcon, Heart, Compass
+  GraduationCap, Search, Grid, Map as MapIcon, Heart, Compass, Loader2, SlidersHorizontal
 } from 'lucide-react';
 
 interface College {
@@ -11,6 +11,7 @@ interface College {
   name: string;
   country: string;
   city: string;
+  state?: string;
   ranking: string;
   avgPackage: string;
   highestPackage: string;
@@ -20,6 +21,8 @@ interface College {
   hostelFees: string;
   scholarships: string;
   popularCourses: string[];
+  entranceExams?: string[];
+  type?: string;
   rating: number;
   lat: number;
   lng: number;
@@ -28,159 +31,100 @@ interface College {
   nearbyMetro: string;
   costOfLiving: string;
   description: string;
+  streamFocus?: string[];
+  numericFees?: number;
 }
+
+const COUNTRIES = ['All', 'India', 'Canada', 'United Kingdom', 'USA', 'Australia', 'Germany', 'Singapore'];
+const STREAMS   = ['All', 'Commerce', 'Technology', 'Engineering', 'Medicine', 'Law', 'Business', 'Arts & Design', 'Science'];
 
 export const CollegeExplorer: React.FC = () => {
   const { savedColleges, toggleSaveCollege } = useApp();
-  const [searchVal, setSearchVal] = useState('');
+  const [colleges, setColleges]         = useState<College[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [searchVal, setSearchVal]       = useState('');
   const [countryFilter, setCountryFilter] = useState('All');
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [streamFilter, setStreamFilter]   = useState('All');
+  const [viewMode, setViewMode]         = useState<'grid' | 'map'>('grid');
   const [selectedCollegeId, setSelectedCollegeId] = useState('srcc');
-  const [activeTab, setActiveTab] = useState<any>('saved');
+  const [activeTab, setActiveTab]       = useState<any>('saved');
+  const [showFilters, setShowFilters]   = useState(false);
 
-  const collegesList: College[] = [
-    {
-      id: "srcc",
-      name: "Shri Ram College of Commerce (SRCC)",
-      country: "India",
-      city: "New Delhi",
-      ranking: "#1 for Commerce (India Today)",
-      avgPackage: "₹10.5 LPA",
-      highestPackage: "₹35 LPA",
-      placementRate: "95%",
-      acceptanceRate: "1.5%",
-      fees: "₹30,000 / year",
-      hostelFees: "₹80,000 / year",
-      scholarships: "Yes (NSP, Merit-based, Need-based)",
-      popularCourses: ["BCom (Hons)", "BA (Hons) Economics", "MCom"],
-      rating: 4.8,
-      lat: 28.6923,
-      lng: 77.2096,
-      nearbyHostels: "Kamla Nagar, Hudson Lane",
-      nearbyAirports: "IGI Airport (22 km)",
-      nearbyMetro: "Vishwa Vidyalaya Metro (500m)",
-      costOfLiving: "Low (₹10,000 - ₹15,000 / month)",
-      description: "Established in 1926, SRCC is India's premier institution for commerce and economics education, known for stellar placements and highly competitive cutoffs."
-    },
-    {
-      id: "christ-university",
-      name: "Christ University",
-      country: "India",
-      city: "Bengaluru",
-      ranking: "#4 for Commerce (NIRF)",
-      avgPackage: "₹7.2 LPA",
-      highestPackage: "₹21 LPA",
-      placementRate: "88%",
-      acceptanceRate: "8%",
-      fees: "₹2,50,000 / year",
-      hostelFees: "₹1,20,000 / year",
-      scholarships: "Yes (Merit scholarships, Financial Aid)",
-      popularCourses: ["BCom Professional", "BBA Finance", "MBA"],
-      rating: 4.5,
-      lat: 12.9362,
-      lng: 77.6059,
-      nearbyHostels: "SG Palya, Koramangala",
-      nearbyAirports: "Kempegowda Airport (41 km)",
-      nearbyMetro: "South End Circle Metro (3 km)",
-      costOfLiving: "Medium (₹15,000 - ₹25,000 / month)",
-      description: "Christ University is a private deemed university in Bengaluru, famous for its holistic education, strict discipline, and industry-oriented commerce curriculum."
-    },
-    {
-      id: "university-of-toronto",
-      name: "University of Toronto",
-      country: "Canada",
-      city: "Toronto",
-      ranking: "#21 (QS Global World Rankings)",
-      avgPackage: "$82,000 / year",
-      highestPackage: "$220,000 / year",
-      placementRate: "92%",
-      acceptanceRate: "43%",
-      fees: "$45,000 / year",
-      hostelFees: "$15,000 / year",
-      scholarships: "Yes (Pearson Scholarship)",
-      popularCourses: ["Rotman Commerce (BCom)", "Economics & Finance"],
-      rating: 4.9,
-      lat: 43.6629,
-      lng: -79.3957,
-      nearbyHostels: "On-Campus Dorms, Downtown Condos",
-      nearbyAirports: "Toronto Pearson Airport (25 km)",
-      nearbyMetro: "Queen's Park Subway (100m)",
-      costOfLiving: "High ($1,800 - $2,500 / month)",
-      description: "U of T is Canada's leading university. The Rotman Commerce program combines business education with arts and sciences, providing superior placements globally."
-    },
-    {
-      id: "london-school-of-economics",
-      name: "London School of Economics (LSE)",
-      country: "United Kingdom",
-      city: "London",
-      ranking: "#45 (QS Global World Rankings)",
-      avgPackage: "£65,000 / year",
-      highestPackage: "£180,000 / year",
-      placementRate: "94%",
-      acceptanceRate: "9%",
-      fees: "£26,000 / year",
-      hostelFees: "£10,000 / year",
-      scholarships: "Yes (LSE Support Scheme)",
-      popularCourses: ["BSc Finance", "BSc Accounting & Finance"],
-      rating: 4.9,
-      lat: 51.5144,
-      lng: -0.1165,
-      nearbyHostels: "Holborn, Covent Garden Housing",
-      nearbyAirports: "London Heathrow Airport (28 km)",
-      nearbyMetro: "Holborn Tube Station (300m)",
-      costOfLiving: "Very High (£1,400 - £2,000 / month)",
-      description: "LSE is a world-class social science university specializing in economics, politics, law, and finance. Located in the heart of London."
-    }
-  ];
+  // ── Fetch full college list from backend ─────────────────────────────────
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/colleges');
+        if (!res.ok) throw new Error('Failed to load colleges');
+        const data: College[] = await res.json();
+        setColleges(data);
+        if (data.length > 0) setSelectedCollegeId(data[0].id);
+      } catch (err) {
+        console.error('College fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchColleges();
+  }, []);
 
   const handleSave = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     toggleSaveCollege(id);
   };
 
-  const filteredColleges = collegesList.filter((col) => {
-    const matchesSearch = col.name.toLowerCase().includes(searchVal.toLowerCase()) || col.city.toLowerCase().includes(searchVal.toLowerCase());
-    const matchesCountry = countryFilter === 'All' || col.country.toLowerCase() === countryFilter.toLowerCase();
-    const matchesSaved = activeTab === 'all' || savedColleges.includes(col.id);
-    return matchesSearch && matchesCountry && matchesSaved;
-  });
+  // ── Client-side filter (fast, avoids extra round-trips) ──────────────────
+  const filteredColleges = useMemo(() => {
+    return colleges.filter((col) => {
+      const matchesSearch = !searchVal ||
+        col.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+        col.city.toLowerCase().includes(searchVal.toLowerCase()) ||
+        (col.popularCourses || []).some(c => c.toLowerCase().includes(searchVal.toLowerCase()));
+      const matchesCountry = countryFilter === 'All' || col.country.toLowerCase() === countryFilter.toLowerCase();
+      const matchesStream  = streamFilter === 'All' ||
+        (col.streamFocus || []).some(s => s.toLowerCase().includes(streamFilter.toLowerCase()));
+      const matchesSaved   = activeTab === 'all' || savedColleges.includes(col.id);
+      return matchesSearch && matchesCountry && matchesStream && matchesSaved;
+    });
+  }, [colleges, searchVal, countryFilter, streamFilter, activeTab, savedColleges]);
 
-  const activeCollege = collegesList.find(c => c.id === selectedCollegeId) || collegesList[0];
+  const activeCollege = useMemo(
+    () => colleges.find(c => c.id === selectedCollegeId) || colleges[0],
+    [colleges, selectedCollegeId]
+  );
 
+  // ── Loading state ─────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-full">
+        <div className="flex flex-col items-center gap-3 text-slate-400">
+          <Loader2 size={32} className="animate-spin text-indigo-500" />
+          <p className="text-sm font-medium">Loading {colleges.length > 0 ? colleges.length : ''} colleges…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Empty saved state ─────────────────────────────────────────────────────
   if (activeTab === 'saved' && savedColleges.length === 0) {
     return (
       <div className="flex-1 p-6 space-y-6 overflow-y-auto h-full select-none pb-24 transition-colors">
-        {/* Header bar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-heading">
               <GraduationCap size={22} className="text-brand-primary" /> College Finder Explorer
             </h2>
-            <p className="text-xs text-slate-400">Match and browse global universities offering premium commerce, analytics, and accounting paths.</p>
+            <p className="text-xs text-slate-400">Browse {colleges.length} real universities worldwide — India, USA, UK, Canada, Australia, Germany & Singapore.</p>
           </div>
         </div>
 
-        {/* Tab Selection */}
         <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800 pb-2">
-          <button
-            onClick={() => setActiveTab('saved')}
-            className={`text-xs font-bold transition-all ${
-              activeTab === 'saved'
-                ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold'
-                : 'text-slate-450 hover:text-slate-600'
-            }`}
-          >
+          <button onClick={() => setActiveTab('saved')} className={`text-xs font-bold transition-all ${activeTab === 'saved' ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold' : 'text-slate-450 hover:text-slate-600'}`}>
             Saved Colleges (0)
           </button>
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`text-xs font-bold transition-all ${
-              activeTab === 'all'
-                ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold'
-                : 'text-slate-450 hover:text-slate-600'
-            }`}
-          >
-            Search & Recommended
+          <button onClick={() => setActiveTab('all')} className={`text-xs font-bold transition-all ${activeTab === 'all' ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold' : 'text-slate-450 hover:text-slate-600'}`}>
+            Search & Recommended ({colleges.length})
           </button>
         </div>
 
@@ -193,8 +137,8 @@ export const CollegeExplorer: React.FC = () => {
             </svg>
           }
           heading="No colleges saved yet 🎓"
-          subtext="Search colleges or complete your profile to see AI-matched universities."
-          buttonText="Search Colleges"
+          subtext={`Search across ${colleges.length} global universities or complete your profile to see AI-matched colleges.`}
+          buttonText="Browse All Colleges"
           onButtonClick={() => setActiveTab('all')}
         />
       </div>
@@ -203,103 +147,138 @@ export const CollegeExplorer: React.FC = () => {
 
   return (
     <div className="flex-1 p-6 space-y-6 overflow-y-auto h-full select-none pb-24 transition-colors">
-      
+
       {/* Header bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 font-heading">
             <GraduationCap size={22} className="text-brand-primary" /> College Finder Explorer
           </h2>
-          <p className="text-xs text-slate-400">Match and browse global universities offering premium commerce, analytics, and accounting paths.</p>
+          <p className="text-xs text-slate-400">{colleges.length} universities worldwide — India, USA, UK, Canada, Australia, Germany & Singapore.</p>
         </div>
 
-        {/* View Mode Toggle buttons */}
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
-          <button 
-            onClick={() => setViewMode('grid')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${
-              viewMode === 'grid' ? 'bg-white dark:bg-slate-750 text-indigo-500 shadow-sm' : 'text-slate-500'
-            }`}
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all ${showFilters ? 'bg-indigo-500/10 border-indigo-500 text-indigo-600' : 'border-slate-200 dark:border-slate-700 text-slate-500'}`}
           >
-            <Grid size={14} /> Grid View
+            <SlidersHorizontal size={13} /> Filters
           </button>
-          <button 
-            onClick={() => setViewMode('map')}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${
-              viewMode === 'map' ? 'bg-white dark:bg-slate-750 text-indigo-500 shadow-sm' : 'text-slate-500'
-            }`}
-          >
-            <MapIcon size={14} /> Map View
-          </button>
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={`px-3.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-750 text-indigo-500 shadow-sm' : 'text-slate-500'}`}
+            >
+              <Grid size={14} /> Grid
+            </button>
+            <button 
+              onClick={() => setViewMode('map')}
+              className={`px-3.5 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${viewMode === 'map' ? 'bg-white dark:bg-slate-750 text-indigo-500 shadow-sm' : 'text-slate-500'}`}
+            >
+              <MapIcon size={14} /> Detail
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tab Selection */}
+      {/* Tabs */}
       <div className="flex gap-4 border-b border-slate-250 dark:border-slate-805 pb-2">
-        <button
-          onClick={() => setActiveTab('saved')}
-          className={`text-xs font-bold transition-all ${
-            activeTab === 'saved'
-              ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold'
-              : 'text-slate-450 hover:text-slate-600'
-          }`}
-        >
+        <button onClick={() => setActiveTab('saved')} className={`text-xs font-bold transition-all ${activeTab === 'saved' ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold' : 'text-slate-450 hover:text-slate-600'}`}>
           Saved Colleges ({savedColleges.length})
         </button>
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`text-xs font-bold transition-all ${
-            activeTab === 'all'
-              ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold'
-              : 'text-slate-450 hover:text-slate-600'
-          }`}
-        >
-          Search & Recommended
+        <button onClick={() => setActiveTab('all')} className={`text-xs font-bold transition-all ${activeTab === 'all' ? 'text-indigo-500 border-b-2 border-indigo-500 pb-2 font-extrabold' : 'text-slate-450 hover:text-slate-600'}`}>
+          All Colleges ({colleges.length})
         </button>
       </div>
-      
+
       {/* Filters strip */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row gap-4 justify-between items-center transition-colors">
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-850 px-3.5 py-2 rounded-xl w-full md:max-w-xs border border-transparent focus-within:border-indigo-500/30">
-          <Search size={15} className="text-slate-400" />
-          <input 
-            type="text"
-            value={searchVal}
-            onChange={(e) => setSearchVal(e.target.value)}
-            placeholder="Search college name or city..."
-            className="bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-250 w-full"
-          />
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-3 transition-colors">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-850 px-3.5 py-2 rounded-xl w-full md:max-w-sm border border-transparent focus-within:border-indigo-500/30">
+            <Search size={15} className="text-slate-400" />
+            <input 
+              type="text"
+              value={searchVal}
+              onChange={(e) => setSearchVal(e.target.value)}
+              placeholder="Search name, city, or course..."
+              className="bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-250 w-full"
+            />
+          </div>
+
+          {/* Country filter */}
+          <div className="flex gap-2 w-full md:w-auto overflow-x-auto scrollbar-none flex-wrap">
+            {COUNTRIES.map(country => (
+              <button
+                key={country}
+                onClick={() => setCountryFilter(country)}
+                className={`px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all whitespace-nowrap ${
+                  countryFilter === country
+                    ? 'bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-550 dark:text-slate-400 hover:bg-slate-100'
+                }`}
+              >
+                {country}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto overflow-x-auto scrollbar-none">
-          {['All', 'India', 'Canada', 'United Kingdom'].map(country => (
-            <button
-              key={country}
-              onClick={() => setCountryFilter(country)}
-              className={`px-3.5 py-1.5 rounded-full border text-[10px] font-bold transition-all ${
-                countryFilter === country
-                  ? 'bg-indigo-500/10 border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-550 dark:text-slate-400 hover:bg-slate-100'
-              }`}
-            >
-              {country}
-            </button>
-          ))}
-        </div>
+        {/* Stream filter row */}
+        {showFilters && (
+          <div className="flex gap-2 overflow-x-auto scrollbar-none flex-wrap pt-2 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold text-slate-400 self-center mr-1">Stream:</span>
+            {STREAMS.map(stream => (
+              <button
+                key={stream}
+                onClick={() => setStreamFilter(stream)}
+                className={`px-3 py-1.5 rounded-full border text-[10px] font-bold transition-all whitespace-nowrap ${
+                  streamFilter === stream
+                    ? 'bg-violet-500/10 border-violet-500 text-violet-600 dark:text-violet-400'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-550 dark:text-slate-400 hover:bg-slate-100'
+                }`}
+              >
+                {stream}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* AI Floating Advisor Insight */}
+      {/* Results count */}
+      <p className="text-[11px] text-slate-400">
+        Showing <span className="font-bold text-slate-600 dark:text-slate-300">{filteredColleges.length}</span> of {colleges.length} colleges
+        {countryFilter !== 'All' && ` in ${countryFilter}`}
+        {streamFilter !== 'All' && ` · ${streamFilter}`}
+        {searchVal && ` · matching "${searchVal}"`}
+      </p>
+
+      {/* AI Advisor Insight */}
       <GlassCard className="p-4 flex gap-4 border-indigo-500/10 dark:border-indigo-400/5 bg-indigo-500/[0.01] items-start">
         <Compass size={20} className="text-indigo-500 shrink-0 mt-0.5" />
         <div className="text-xs leading-relaxed text-slate-600 dark:text-slate-350">
-          <span className="font-bold text-slate-800 dark:text-slate-100">AI College Advisor Match: </span>
-          Based on your budget of ₹12 Lakhs and preference to study in Canada, **University of Toronto** represents a superior fit. While tuition is $45,000/yr, it has a 92% placement success rate and qualifies for the full Lester B. Pearson Scholarship. For domestic studies, **SRCC Delhi** provides the highest ROI in the country with annual tuition under ₹30,000 and ₹10.5 LPA average placements.
+          <span className="font-bold text-slate-800 dark:text-slate-100">AI College Advisor: </span>
+          Use the stream and country filters to narrow down by your field of interest. Budget-sensitive? Try filtering by <strong>India</strong> + <strong>Government</strong> type for fees under ₹2L/yr. Going abroad on a budget? <strong>Germany</strong> offers top engineering degrees (TUM, RWTH Aachen) for under €3,500/year — nearly free.
         </div>
       </GlassCard>
 
-      {/* Main content depending on viewmode */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* No results */}
+      {filteredColleges.length === 0 && (
+        <div className="text-center py-12 text-slate-400">
+          <GraduationCap size={36} className="mx-auto mb-3 text-slate-300" />
+          <p className="font-semibold text-slate-600 dark:text-slate-300">No colleges match your filters</p>
+          <p className="text-xs mt-1">Try clearing the stream or country filter</p>
+          <button
+            onClick={() => { setCountryFilter('All'); setStreamFilter('All'); setSearchVal(''); }}
+            className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition"
+          >
+            Clear All Filters
+          </button>
+        </div>
+      )}
+
+      {/* Main content — Grid or Detail view */}
+      {filteredColleges.length > 0 && viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredColleges.map((col) => {
             const isSaved = savedColleges.includes(col.id);
             return (
@@ -309,21 +288,35 @@ export const CollegeExplorer: React.FC = () => {
                 className="glass-panel p-4 rounded-xl cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all border border-slate-200/50 dark:border-slate-800/50 flex flex-col justify-between"
               >
                 <div>
-                  {/* Photo mock placeholder */}
-                  <div className="w-full h-32 rounded-lg bg-gradient-to-tr from-slate-200 to-indigo-50 dark:from-slate-800 dark:to-slate-850 flex items-center justify-center text-slate-400 text-3xl font-heading font-extrabold relative shadow-inner">
-                    {col.name.split(' ').map(x => x.charAt(0)).slice(0, 3).join('')}
+                  {/* Initials avatar */}
+                  <div className="w-full h-28 rounded-lg bg-gradient-to-tr from-slate-200 to-indigo-50 dark:from-slate-800 dark:to-slate-850 flex items-center justify-center text-slate-400 text-2xl font-heading font-extrabold relative shadow-inner">
+                    {col.name.split(' ').filter(x => x.length > 2).map(x => x.charAt(0)).slice(0, 3).join('')}
+                    {/* Type badge */}
+                    {col.type && (
+                      <span className="absolute bottom-2 left-2 text-[8px] font-bold bg-white/80 dark:bg-slate-900/80 px-1.5 py-0.5 rounded text-slate-500">
+                        {col.type.includes('Government') ? '🏛️ Govt' : col.type.includes('Private') ? '🏢 Private' : col.type}
+                      </span>
+                    )}
                     <button 
                       onClick={(e) => handleSave(e, col.id)}
-                      className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 hover:scale-105 active:scale-95 transition-transform"
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 hover:scale-105 active:scale-95 transition-transform"
                     >
-                      <Heart size={14} className={isSaved ? 'fill-indigo-500 text-indigo-500' : 'text-slate-500'} />
+                      <Heart size={13} className={isSaved ? 'fill-indigo-500 text-indigo-500' : 'text-slate-500'} />
                     </button>
                   </div>
                   
                   <div className="mt-3 space-y-1">
                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{col.city}, {col.country}</span>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs md:text-sm font-heading line-clamp-1">{col.name}</h4>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs font-heading line-clamp-2">{col.name}</h4>
                     <p className="text-[10px] text-slate-400 italic mt-0.5 truncate">{col.ranking}</p>
+                    {/* Stream tags */}
+                    {col.streamFocus && col.streamFocus.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {col.streamFocus.slice(0, 3).map(s => (
+                          <span key={s} className="text-[8px] bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded font-bold">{s}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -336,18 +329,24 @@ export const CollegeExplorer: React.FC = () => {
                     <span className="text-slate-400">Annual Tuition:</span>
                     <span className="font-bold text-indigo-550">{col.fees}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Placement:</span>
+                    <span className="font-bold text-emerald-500">{col.placementRate}</span>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-      ) : (
-        /* Split view: List on left, map details on right */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[460px]">
+      ) : filteredColleges.length > 0 ? (
+        /* Detail / Map View */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: 460 }}>
           
-          {/* Colleges lists sidebar */}
-          <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 overflow-y-auto transition-colors">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Universities Selected</h3>
+          {/* List sidebar */}
+          <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2 overflow-y-auto max-h-[500px] transition-colors">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+              {filteredColleges.length} Universities
+            </h3>
             {filteredColleges.map((col) => (
               <div 
                 key={col.id}
@@ -355,54 +354,90 @@ export const CollegeExplorer: React.FC = () => {
                 className={`p-3 rounded-xl border cursor-pointer transition-all ${
                   selectedCollegeId === col.id 
                     ? 'bg-slate-100 dark:bg-slate-800 border-indigo-500/40 dark:border-indigo-400/40 font-bold' 
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50'
                 }`}
               >
                 <h4 className="text-xs text-slate-800 dark:text-slate-150 line-clamp-1 font-heading">{col.name}</h4>
-                <p className="text-[10px] text-slate-400 mt-0.5">{col.city}, {col.country} • Tuition: {col.fees}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{col.city}, {col.country} · {col.fees}</p>
               </div>
             ))}
           </div>
 
-          {/* Map & Proximity Details Dashboard */}
-          <div className="lg:col-span-2 space-y-4 h-full overflow-y-auto">
-            <GlassCard className="p-5 flex flex-col md:flex-row gap-6 border-l-4 border-l-brand-secondary h-full justify-between">
-              
-              <div className="space-y-4 flex-1">
+          {/* Detail panel */}
+          {activeCollege && (
+            <div className="lg:col-span-2 space-y-4">
+              <GlassCard className="p-5 flex flex-col gap-5 border-l-4 border-l-brand-secondary">
+                
                 <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Mock Map coordinates details</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">{activeCollege.city}, {activeCollege.country} · {activeCollege.type}</span>
                   <h3 className="text-base font-bold font-heading mt-0.5">{activeCollege.name}</h3>
-                  <p className="text-[10px] text-slate-400 italic">Coordinates: Latitude {activeCollege.lat}, Longitude {activeCollege.lng}</p>
+                  <p className="text-[11px] text-indigo-500 font-semibold italic mt-0.5">{activeCollege.ranking}</p>
                 </div>
 
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{activeCollege.description}</p>
 
+                {/* Key stats row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[11px]">
+                  {[
+                    { label: 'Annual Tuition', value: activeCollege.fees, color: 'text-indigo-500' },
+                    { label: 'Avg Package', value: activeCollege.avgPackage, color: 'text-emerald-500' },
+                    { label: 'Placement Rate', value: activeCollege.placementRate, color: 'text-sky-500' },
+                    { label: 'Acceptance Rate', value: activeCollege.acceptanceRate, color: 'text-amber-500' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-slate-50 dark:bg-slate-800/60 rounded-lg p-2.5">
+                      <span className="text-slate-400 block mb-1">{item.label}</span>
+                      <span className={`font-bold ${item.color}`}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Courses */}
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Popular Programs</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(activeCollege.popularCourses || []).map(c => (
+                      <span key={c} className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-full">{c}</span>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Proximity metrics */}
                 <div className="grid grid-cols-2 gap-4 text-[11px] pt-3 border-t border-slate-100 dark:border-slate-800">
-                  <div className="space-y-1">
-                    <span className="text-slate-400 font-bold block">Nearby hostels / Student rent:</span>
+                  <div>
+                    <span className="text-slate-400 font-bold block mb-0.5">Student Housing:</span>
                     <p className="text-slate-700 dark:text-slate-350">{activeCollege.nearbyHostels}</p>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-slate-400 font-bold block">Closest local Metro / Subway:</span>
+                  <div>
+                    <span className="text-slate-400 font-bold block mb-0.5">Metro / Transit:</span>
                     <p className="text-slate-700 dark:text-slate-350">{activeCollege.nearbyMetro}</p>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-slate-400 font-bold block">Local Cost of Living index:</span>
+                  <div>
+                    <span className="text-slate-400 font-bold block mb-0.5">Cost of Living:</span>
                     <p className="text-emerald-500 font-bold">{activeCollege.costOfLiving}</p>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-slate-400 font-bold block">Nearby Airports:</span>
+                  <div>
+                    <span className="text-slate-400 font-bold block mb-0.5">Nearest Airport:</span>
                     <p className="text-slate-700 dark:text-slate-350">{activeCollege.nearbyAirports}</p>
                   </div>
                 </div>
-              </div>
 
-            </GlassCard>
-          </div>
+                {/* Scholarships & Entrance */}
+                <div className="grid grid-cols-2 gap-4 text-[11px] pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <div>
+                    <span className="text-slate-400 font-bold block mb-0.5">Scholarships:</span>
+                    <p className="text-emerald-600 dark:text-emerald-400 font-semibold">{activeCollege.scholarships}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-bold block mb-0.5">Entrance Exams:</span>
+                    <p className="text-slate-700 dark:text-slate-350">{(activeCollege.entranceExams || []).join(', ')}</p>
+                  </div>
+                </div>
 
+              </GlassCard>
+            </div>
+          )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

@@ -2,7 +2,7 @@
 
 > "Discover Your Future. Powered by AI."
 
-CareerPathFinder AI is a state-of-the-art, full-stack AI-powered Career Operating System designed to help students and professionals worldwide map their future pathways. Similar to "Google Maps for Careers", the platform takes input parameters (enjoyed academic subjects, familiar skills, targets, budgets, and preferred visa pathways) and orchestrates a **Multi-Agent AI Counseling System** powered by Claude API (claude-sonnet-4-20250514) to return structured recommendations, break-even tuition analyses, and detailed career blueprints.
+CareerPathFinder AI is a state-of-the-art, full-stack AI-powered Career Operating System designed to help students and professionals worldwide map their future pathways. Similar to "Google Maps for Careers", the platform takes input parameters (enjoyed academic subjects, familiar skills, targets, budgets, and preferred visa pathways) and orchestrates a **Multi-Agent AI Counseling System** powered by Google Gemini API (gemini-3.5-flash) to return structured recommendations, break-even tuition analyses, and detailed career blueprints.
 
 ---
 
@@ -106,9 +106,10 @@ graph TD
 2. Create a `.env` file in the `/server` folder:
    ```env
    PORT=5000
-   CLAUDE_API_KEY=your-claude-api-key-here
+   GEMINI_API_KEY=your-gemini-api-key-here
    ```
-   *Note: If no API key is specified, the server automatically and gracefully falls back to a high-fidelity local database matching simulation, ensuring 100% functionality.*
+   Get a free API key at [Google AI Studio](https://aistudio.google.com/app/apikey).
+   *Note: If no API key is specified, the server automatically falls back to a high-fidelity local database matching simulation, ensuring 100% functionality.*
 
 3. Start the development server:
    ```bash
@@ -131,7 +132,7 @@ graph TD
 
 ## 🛡 Security & Deployability
 - **Sanitized Inputs**: All user forms (discovery wizard, calculator variables) are validated in the controllers.
-- **Environment Safety**: Credentials like the Anthropic API keys are loaded via server-side environment configurations (`.env`) and never exposed to client-side files.
+- **Environment Safety**: Credentials like the Google Gemini API key are loaded via server-side environment configurations (`.env`) and never exposed to client-side files.
 - **Graceful Fallbacks**: If connection failures occur with external LLM pipelines, specialized local agents resolve queries locally using relational indices.
 - **Production Builds**: Built with TypeScript compilation guidelines (`tsc && vite build`) for deployment on Vercel, Netlify, or AWS Amplify.
 
@@ -150,8 +151,8 @@ This app is configured to be deployed with **Vercel** (for frontend) and **Rende
    - Set **Root Directory** to `server`.
    - Set **Build Command** to `npm install` and **Start Command** to `npm start`.
    - Add environment variables:
-     - `CLAUDE_API_KEY`: Your Anthropic API Key.
-     - `FRONTEND_URL`: Your Vercel frontend URL (e.g., `https://your-app.vercel.app`).
+      - `GEMINI_API_KEY`: Your Google Gemini API Key (from [AI Studio](https://aistudio.google.com/app/apikey)).
+      - `FRONTEND_URL`: Your Vercel frontend URL (e.g., `https://your-app.vercel.app`).
 3. **Deploy Frontend (Vercel)**:
    - Import your repository.
    - Set **Root Directory** to `client`.

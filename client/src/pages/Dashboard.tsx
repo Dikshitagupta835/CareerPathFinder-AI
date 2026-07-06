@@ -119,6 +119,16 @@ export const Dashboard: React.FC = () => {
         </form>
       </div>
 
+      {/* Demo Mode Warning Banner */}
+      {recommendations?.isDemoMode && (
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-3 rounded-2xl flex items-center justify-between text-xs font-medium">
+          <div className="flex items-center gap-2">
+            <Sparkles size={14} className="animate-pulse" />
+            <span><strong>Demo Mode Enabled</strong>: The AI services are currently offline. Displaying simulated recommendations based on your preferences.</span>
+          </div>
+        </div>
+      )}
+
       {/* Quick Actions Grid */}
       <div>
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</h3>

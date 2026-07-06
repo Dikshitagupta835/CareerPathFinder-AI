@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head><title>Cache Cleared</title></head>
+<body>
+<script>
+  localStorage.removeItem('cpf_saved_accounts');
+  localStorage.removeItem('cpf_token');
+  sessionStorage.removeItem('cpf_token');
+  window.location.replace('/auth');
+</script>
+</body>
+</html>

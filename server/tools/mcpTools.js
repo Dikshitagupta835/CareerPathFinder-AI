@@ -19,36 +19,144 @@ const loadJSON = (filename) => {
 
 export const careerSearchTool = (query = {}) => {
   const careers = loadJSON('careers.json');
-  return careers.filter(c => {
+  const filtered = careers.filter(c => {
     let match = true;
+
+    // Category / stream exact match
     if (query.category && c.category.toLowerCase() !== query.category.toLowerCase()) match = false;
+
+    // Stream array membership (e.g. query.stream = "Technology")
+    if (query.stream) {
+      const streamLC = query.stream.toLowerCase();
+      const catLC = (c.category || '').toLowerCase();
+      if (!catLC.includes(streamLC) && !streamLC.includes(catLC)) match = false;
+    }
+
+    // Difficulty
     if (query.difficulty && c.difficulty.toLowerCase() !== query.difficulty.toLowerCase()) match = false;
+
+    // Max AI automation risk (e.g. query.maxAiRisk = 30 means ≤ 30%)
+    if (query.maxAiRisk !== undefined) {
+      const riskVal = parseFloat((c.aiAutomationRisk || '0').replace(/[^0-9.]/g, ''));
+      if (!isNaN(riskVal) && riskVal > query.maxAiRisk) match = false;
+    }
+
+    // Minimum future demand (1-10 scale)
+    if (query.minFutureDemand !== undefined) {
+      const demandVal = parseFloat(c.futureDemandRating || 0);
+      if (!isNaN(demandVal) && demandVal < query.minFutureDemand) match = false;
+    }
+
+    // Free-text name / skill search
+    if (query.search) {
+      const searchLC = query.search.toLowerCase();
+      const hay = [c.name, c.category, ...(c.requiredSkills || []), c.description || ''].join(' ').toLowerCase();
+      if (!hay.includes(searchLC)) match = false;
+    }
+
+    // Interest keyword mapping
     if (query.interests && query.interests.length > 0) {
-      // check if any of the interest keywords match required skills or category
-      const keywords = query.interests.map(i => i.toLowerCase());
-      const cKeywords = [c.name, c.category, ...c.requiredSkills].map(x => x.toLowerCase());
-      const hasOverlap = keywords.some(k => cKeywords.some(ck => ck.includes(k)));
+      const interestKeywordMap = {
+        "solving problems": ["problem solving", "analytical", "analysis", "statistics", "econometrics", "logic"],
+        "leading teams": ["leadership", "management", "strategy", "scrum", "agile", "lead"],
+        "building businesses": ["entrepreneur", "business strategy", "sales", "fundraising", "marketing", "product development"],
+        "helping people": ["consulting", "communication", "advisory", "teaching", "healthcare"],
+        "teaching": ["communication", "presentation", "writing", "public speaking"],
+        "coding": ["python", "sql", "programming", "machine learning", "big data", "technology", "software"],
+        "travelling": ["global", "international", "visa", "abroad"],
+        "creating content": ["writing", "presentation", "communication", "marketing"],
+        "research": ["research", "market research", "analysis", "statistics", "data analysis", "econometrics"],
+        "managing money": ["accounting", "taxation", "auditing", "financial modelling", "finance", "valuation", "investment"]
+      };
+
+      const keywords = query.interests.flatMap(i => {
+        const mapped = interestKeywordMap[i.toLowerCase()];
+        return mapped ? [i.toLowerCase(), ...mapped] : [i.toLowerCase()];
+      });
+
+      const cKeywords = [c.name, c.category, ...(c.requiredSkills || [])].map(x => x.toLowerCase());
+      const hasOverlap = keywords.some(k => cKeywords.some(ck => ck.includes(k) || k.includes(ck)));
       if (!hasOverlap) match = false;
     }
+
     return match;
   });
+
+  // If no careers match the interest filter, return all careers rather than returning empty
+  if (filtered.length === 0) {
+    return careers;
+  }
+  return filtered;
 };
 
 export const collegeSearchTool = (query = {}) => {
   const colleges = loadJSON('colleges.json');
-  return colleges.filter(col => {
+  const filtered = colleges.filter(col => {
     let match = true;
+
+    // Country filter
     if (query.country && col.country.toLowerCase() !== query.country.toLowerCase()) match = false;
+
+    // City filter
     if (query.city && col.city.toLowerCase() !== query.city.toLowerCase()) match = false;
+
+    // Stream / focus area filter (e.g. "Technology", "Commerce", "Law")
+    if (query.stream) {
+      const streamLC = query.stream.toLowerCase();
+      const focusArr = (col.streamFocus || []).map(s => s.toLowerCase());
+      if (!focusArr.some(f => f.includes(streamLC) || streamLC.includes(f))) match = false;
+    }
+
+    // Course keyword filter (searches popularCourses array)
+    if (query.course) {
+      const courseLC = query.course.toLowerCase();
+      const coursesStr = (col.popularCourses || []).join(' ').toLowerCase();
+      if (!coursesStr.includes(courseLC)) match = false;
+    }
+
+    // Free-text name / city / description search
+    if (query.search) {
+      const searchLC = query.search.toLowerCase();
+      const hay = [col.name, col.city, col.country, col.description || '', ...(col.popularCourses || [])].join(' ').toLowerCase();
+      if (!hay.includes(searchLC)) match = false;
+    }
+
+    // Budget filter — use numericFees if available, else parse fees string
     if (query.maxBudget) {
-      // parse fee (e.g. ₹2,50,000 / year or $45,000 / year)
-      const numericFee = parseCurrency(col.fees);
+      const numericFee = col.numericFees !== undefined ? col.numericFees : parseCurrency(col.fees);
       if (numericFee > query.maxBudget) match = false;
     }
-    if (query.scholarshipsAvailable && col.scholarships.toLowerCase() === 'no') match = false;
+
+    // Institution type filter (e.g. "Government", "Private")
+    if (query.type) {
+      const typeLC = query.type.toLowerCase();
+      if (!(col.type || '').toLowerCase().includes(typeLC)) match = false;
+    }
+
+    // Scholarships available filter
+    if (query.scholarshipsAvailable && (col.scholarships || '').toLowerCase().startsWith('no')) match = false;
+
+    // Minimum rating filter
+    if (query.minRating !== undefined) {
+      if ((col.rating || 0) < query.minRating) match = false;
+    }
+
+    // Minimum placement rate filter
+    if (query.minPlacementRate !== undefined) {
+      const pRate = parseFloat((col.placementRate || '0').replace(/[^0-9.]/g, ''));
+      if (!isNaN(pRate) && pRate < query.minPlacementRate) match = false;
+    }
+
     return match;
   });
+
+  // Return all colleges if no filters match anything
+  if (filtered.length === 0 && Object.keys(query).length > 0) {
+    return colleges;
+  }
+  return filtered;
 };
+
 
 export const scholarshipSearchTool = (query = {}) => {
   const scholarships = loadJSON('scholarships.json');

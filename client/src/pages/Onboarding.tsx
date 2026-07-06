@@ -5,7 +5,7 @@ import { ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Onboarding: React.FC = () => {
-  const { user, updateUser, syncUser, isAuthenticated } = useApp();
+  const { user, syncUser, isAuthenticated } = useApp();
   const navigate = useNavigate();
 
   // Redirect if not logged in
@@ -121,7 +121,9 @@ export const Onboarding: React.FC = () => {
         familyIncome: user.familyIncome || 500000,
         marks: user.marks || '',
         interests: user.interests || [],
-        careerGoals: user.careerGoals || []
+        careerGoals: user.careerGoals || [],
+        workStyle: user.workStyle || '',
+        workLifeBalance: user.workLifeBalance || ''
       });
       
       // If user has saved progress step, load it
@@ -182,14 +184,12 @@ export const Onboarding: React.FC = () => {
           careerGoals: profileData.interests?.map(i => `Excel in ${i}`) || ['Discover Careers']
         } as UserProfile;
 
-        // Save complete profile, mark onboardingComplete, generate matches
-        await updateUser(finalProfile);
-        
-        // Final sync
+        // Save complete profile, mark onboardingComplete, clear recommendations in a single call to avoid race conditions
         await syncUser({
           profile: finalProfile,
           onboardingComplete: true,
-          onboardingStep: 0
+          onboardingStep: 0,
+          recommendations: null
         });
 
         setIsLoading(false);
@@ -230,9 +230,9 @@ export const Onboarding: React.FC = () => {
   if (!currentQuestion) return null;
 
   return (
-    <div className="min-h-screen w-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col justify-between overflow-y-auto py-8">
+    <div className="h-screen w-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col justify-between overflow-hidden py-6">
       {/* Onboarding Wizard Header */}
-      <header className="max-w-2xl w-full mx-auto px-6 space-y-4">
+      <header className="max-w-2xl w-full mx-auto px-6 space-y-4 flex-shrink-0">
         <div className="flex justify-between items-center text-[10px] font-bold text-indigo-550 uppercase tracking-widest">
           <span className="flex items-center gap-1"><Sparkles size={11} /> AI Assistant</span>
           <span>Question {step + 1} of {questions.length}</span>
@@ -248,7 +248,7 @@ export const Onboarding: React.FC = () => {
       </header>
 
       {/* Main Body */}
-      <main className="max-w-2xl w-full mx-auto px-6 py-12 flex-1 flex flex-col justify-center">
+      <main className="max-w-2xl w-full mx-auto px-6 py-6 flex-1 overflow-y-auto flex flex-col justify-center min-h-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -356,7 +356,7 @@ export const Onboarding: React.FC = () => {
       </main>
 
       {/* Navigation Buttons footer */}
-      <footer className="max-w-2xl w-full mx-auto px-6 flex justify-between items-center">
+      <footer className="max-w-2xl w-full mx-auto px-6 flex justify-between items-center flex-shrink-0">
         <button
           onClick={handleBack}
           disabled={step === 0}
