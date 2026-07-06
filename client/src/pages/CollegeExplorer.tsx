@@ -38,6 +38,8 @@ interface College {
 const COUNTRIES = ['All', 'India', 'Canada', 'United Kingdom', 'USA', 'Australia', 'Germany', 'Singapore'];
 const STREAMS   = ['All', 'Commerce', 'Technology', 'Engineering', 'Medicine', 'Law', 'Business', 'Arts & Design', 'Science'];
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export const CollegeExplorer: React.FC = () => {
   const { savedColleges, toggleSaveCollege } = useApp();
   const [colleges, setColleges]         = useState<College[]>([]);
@@ -58,7 +60,7 @@ export const CollegeExplorer: React.FC = () => {
       try {
         setLoading(true);
         setFetchError(null);
-        const res = await fetch('/api/colleges');
+        const res = await fetch(`${API_URL}/api/colleges`);
         if (!res.ok) throw new Error(`Server error ${res.status}: ${res.statusText}`);
         const data: College[] = await res.json();
         setColleges(data);

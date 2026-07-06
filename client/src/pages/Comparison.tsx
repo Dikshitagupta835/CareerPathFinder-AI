@@ -58,6 +58,8 @@ function toComparisonEntry(c: CareerEntry) {
 }
 
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export const Comparison: React.FC = () => {
   const [allCareers, setAllCareers] = useState<ReturnType<typeof toComparisonEntry>[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -73,7 +75,7 @@ export const Comparison: React.FC = () => {
       try {
         setLoading(true);
         setFetchError(null);
-        const res = await fetch('/api/careers');
+        const res = await fetch(`${API_URL}/api/careers`);
         if (!res.ok) throw new Error(`Server error ${res.status}: ${res.statusText}`);
         const data: CareerEntry[] = await res.json();
         setAllCareers(data.map(toComparisonEntry));
