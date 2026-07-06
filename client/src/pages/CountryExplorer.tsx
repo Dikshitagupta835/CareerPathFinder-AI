@@ -267,7 +267,7 @@ export const CountryExplorer: React.FC = () => {
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-bold">
               <span className="text-slate-400">Native currency: {activeCountry.currency} ({activeCountry.language})</span>
               <button 
-                onClick={() => window.location.href = '/colleges'}
+                onClick={() => navigate('/colleges')}
                 className="text-indigo-550 font-bold hover:underline flex items-center gap-0.5"
               >
                 Browse Colleges in {activeCountry.name} <ArrowRight size={12} />

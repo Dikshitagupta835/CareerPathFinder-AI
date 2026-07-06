@@ -47,7 +47,7 @@ export const CollegeExplorer: React.FC = () => {
   const [streamFilter, setStreamFilter]   = useState('All');
   const [viewMode, setViewMode]         = useState<'grid' | 'map'>('grid');
   const [selectedCollegeId, setSelectedCollegeId] = useState('srcc');
-  const [activeTab, setActiveTab]       = useState<any>('saved');
+  const [activeTab, setActiveTab]       = useState<any>('all');
   const [showFilters, setShowFilters]   = useState(false);
 
   // ── Fetch full college list from backend ─────────────────────────────────

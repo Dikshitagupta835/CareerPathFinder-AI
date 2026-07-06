@@ -228,13 +228,13 @@ export const CareerUniverse: React.FC = () => {
 
           <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
             <button 
-              onClick={() => window.location.href = '/career-roadmap'}
+              onClick={() => navigate('/career-roadmap')}
               className="btn-primary w-full text-center text-xs py-2"
             >
               Analyze Roadmap timeline
             </button>
             <button 
-              onClick={() => window.location.href = '/salary-explorer'}
+              onClick={() => navigate('/salary-explorer')}
               className="btn-secondary w-full text-center text-xs py-2"
             >
               Compare Salary details
